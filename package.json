@@ -1,0 +1,22 @@
+{
+  "name": "projetoi",
+  "version": "1.0.0",
+  "description": "Projeto desenvolvido pelo aluno José Henrique Falsarella Lima Oliveira, prontuário BT3049663, para avaliação  da disciplina de Programação Web do Curso Superior de Tecnologia em Análise e Desenvolvimento de Sistemas do Instituto Federal de São Paulo, Campus Boituva.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/app.js",
+    "build": "npx tsc",
+    "dev": "ts-node src/app.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.29",
+    "express": "^5.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
