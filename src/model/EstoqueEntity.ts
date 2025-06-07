@@ -1,11 +1,11 @@
-export class Estoque {
+export class EstoqueEntity {
     id: number
     livro_id: number
     quantidade: number
     quantidade_emprestada: number
     disponivel: boolean
 
-    constructor(id: number, livro_id: number, quantidade: number, quantidade_emprestada: number, disponivel: boolean) {
+    constructor(id: number | undefined, livro_id: number, quantidade: number, quantidade_emprestada: number, disponivel: boolean) {
         this.id = id ?? this.gerarId()
         this.livro_id = livro_id
         this.quantidade = quantidade

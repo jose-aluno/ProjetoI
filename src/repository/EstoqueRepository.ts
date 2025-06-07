@@ -1,8 +1,8 @@
-import { Estoque } from "../model/EstoqueEntity"
+import { EstoqueEntity } from "../model/EstoqueEntity"
 
 export class EstoqueRepository {
     private static instance: EstoqueRepository
-    private estoqueList: Estoque[] = []
+    private estoqueList: EstoqueEntity[] = []
 
     private constructor() {}
 
@@ -13,15 +13,15 @@ export class EstoqueRepository {
         return this.instance
     }
 
-    inserir(estoque: Estoque) {
+    inserir(estoque: EstoqueEntity) {
         this.estoqueList.push(estoque)
     }
 
-    listar(): Estoque[] {
+    listar(): EstoqueEntity[] {
         return this.estoqueList
     }
 
-    buscarPorId(id: number): Estoque | undefined {
+    buscarPorId(id: number): EstoqueEntity | undefined {
         return this.estoqueList.find(e => e.id === id)
     }
 
