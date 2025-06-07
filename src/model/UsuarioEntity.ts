@@ -4,18 +4,18 @@ export class UsuarioEntity {
     cpf: string
     status: number
     email: string
-    categoriaId: number
-    cursoId: number
+    categoria_id: number
+    curso_id: number
 
-    constructor (id: number | undefined, nome: string, cpf: string, status: number, email: string, categoriaId: number, cursoId: number)
+    constructor (id: number | undefined, nome: string, cpf: string, status: number, email: string, categoria_id: number, curso_id: number)
     {
         this.id = id ?? this.gerarId()
         this.nome = nome
         this.cpf = cpf
         this.status = status
         this.email = email
-        this.categoriaId = categoriaId
-        this.cursoId = cursoId
+        this.categoria_id = categoria_id
+        this.curso_id = curso_id
     }
 
     private gerarId(): number {
