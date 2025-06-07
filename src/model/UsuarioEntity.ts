@@ -2,7 +2,7 @@ export class UsuarioEntity {
     id: number
     nome: string
     cpf: string
-    status: number
+    status: number // 0 = inativo, 1 = ativo, 2 = suspenso
     email: string
     categoria_id: number
     curso_id: number
