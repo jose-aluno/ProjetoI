@@ -1,4 +1,4 @@
-import { Estoque } from "../model/Estoque"
+import { Estoque } from "../model/EstoqueEntity"
 
 export class EstoqueRepository {
     private static instance: EstoqueRepository
