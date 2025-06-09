@@ -3,9 +3,9 @@ import { CursoEntity } from "../model/CursoEntity";
 export class CursoRepository {
     private static instance: CursoRepository
     private cursoList: CursoEntity[] = [
-        new CursoEntity(1, 'ADS'),
-        new CursoEntity(2, 'Pedagogia'),
-        new CursoEntity(3, 'Administração')
+        new CursoEntity(2, 'ADS'),
+        new CursoEntity(3, 'Pedagogia'),
+        new CursoEntity(4, 'Administração')
     ];
 
     private constructor() {}

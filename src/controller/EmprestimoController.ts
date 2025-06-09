@@ -29,7 +29,7 @@ export class EmprestimoController {
   registrarDevolucao(req: Request, res: Response): void {
     try {
       const { id } = req.params;
-      const atualizado = this.emprestimoService.atualizarEmprestimo(Number(id), req.body);
+      const atualizado = this.emprestimoService.atualizarEmprestimo(Number(id));
       res.status(200).json({ message: "Empréstimo atualizado com sucesso!", atualizado });
     } catch (error: unknown) {
       res.status(400).json({

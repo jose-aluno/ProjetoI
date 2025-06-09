@@ -1,55 +1,106 @@
-import { EmprestimoEntity } from "../model/EmprestimoEntity"
-import { EmprestimoRepository } from "../repository/EmprestimoRepository"
+import { EmprestimoEntity } from "../model/EmprestimoEntity";
+import { EmprestimoRepository } from "../repository/EmprestimoRepository";
+import { EstoqueRepository } from "../repository/EstoqueRepository";
+import { UsuarioRepository } from "../repository/UsuarioRepository";
+import { LivroRepository } from "../repository/LivroRepository";
 
 export class EmprestimoService {
-    private emprestimoRepository = EmprestimoRepository.getInstance()
+  private emprestimoRepository = EmprestimoRepository.getInstance();
+  private estoqueRepository = EstoqueRepository.getInstance();
+  private usuarioRepository = UsuarioRepository.getInstance();
+  private livroRepository = LivroRepository.getInstance();
 
-    cadastrarEmprestimo(dados: any): EmprestimoEntity {
-        const {usuario_id, estoque_id, data_emprestimo, data_devolucao, data_entrega, dias_atraso, suspensao_ate} = dados
+  cadastrarEmprestimo(dados: any): EmprestimoEntity {
+    const { cpf, estoque_id } = dados;
 
-        if (usuario_id === undefined || estoque_id === undefined || !data_emprestimo || !data_devolucao || !data_entrega || dias_atraso === undefined || !suspensao_ate) {
-            throw new Error("Todos os campos obrigatórios devem ser informados.")
-        }
-
-        const novoEmprestimo = new EmprestimoEntity(
-            undefined,
-            usuario_id,
-            estoque_id,
-            new Date(data_emprestimo),
-            new Date(data_devolucao),
-            new Date(data_entrega),
-            dias_atraso,
-            new Date(suspensao_ate)
-        )
-
-        this.emprestimoRepository.inserir(novoEmprestimo)
-        return novoEmprestimo
+    if (!cpf || estoque_id === undefined) {
+      throw new Error("Campos 'cpf' e 'estoque_id' são obrigatórios.");
     }
 
-    listarEmprestimos(): EmprestimoEntity[] {
-        return this.emprestimoRepository.listar()
+    const usuario = this.usuarioRepository.buscarPorCPF(cpf);
+    if (!usuario) throw new Error("Usuário não encontrado.");
+    if (usuario.status !== 1) throw new Error("Usuário não está ativo.");
+
+    const estoque = this.estoqueRepository.buscarPorId(estoque_id);
+    if (!estoque) throw new Error("Exemplar não encontrado.");
+    if (!estoque.disponivel) throw new Error("Exemplar indisponível.");
+
+    const livro = this.livroRepository.buscarPorISBN(estoque.livro_isbn);
+    if (!livro) throw new Error("Livro não encontrado.");
+
+    const emprestimosUsuario = this.emprestimoRepository.listar().filter(e =>
+      e.usuario_cpf === cpf && e.data_entrega === null
+    );
+
+    const limite = usuario.categoria_id === 1 ? 5 : 3;
+    if (emprestimosUsuario.length >= limite) {
+      throw new Error(`Usuário já atingiu o limite de empréstimos (${limite}).`);
     }
 
-    buscarPorId(id: number): EmprestimoEntity | undefined {
-        return this.emprestimoRepository.buscarPorId(id)
+    const diasPrazo = usuario.categoria_id === 1
+      ? 40
+      : (usuario.curso_id === livro.categoria_id ? 30 : 15);
+
+    const data_emprestimo = new Date();
+    const data_devolucao = new Date();
+    data_devolucao.setDate(data_emprestimo.getDate() + diasPrazo);
+
+    const emprestimo = new EmprestimoEntity(
+      undefined,
+      cpf,
+      estoque_id,
+      data_emprestimo,
+      data_devolucao,
+      null,
+      0,
+      null
+    );
+
+    estoque.quantidade_emprestada++;
+    estoque.disponivel = estoque.quantidade > estoque.quantidade_emprestada;
+
+    this.emprestimoRepository.inserir(emprestimo);
+    return emprestimo;
+  }
+
+  atualizarEmprestimo(id: number): boolean {
+    const emprestimo = this.emprestimoRepository.buscarPorId(id);
+    if (!emprestimo) throw new Error("Empréstimo não encontrado.");
+    if (emprestimo.data_entrega) throw new Error("Este empréstimo já foi devolvido.");
+
+    const hoje = new Date();
+    const atraso = Math.max(
+      0,
+      Math.ceil((hoje.getTime() - emprestimo.data_devolucao.getTime()) / (1000 * 60 * 60 * 24))
+    );
+
+    const suspensao_ate = atraso > 0 ? new Date(hoje.getTime() + atraso * 3 * 24 * 60 * 60 * 1000) : null;
+
+    emprestimo.data_entrega = hoje;
+    emprestimo.dias_atraso = atraso;
+    emprestimo.suspensao_ate = suspensao_ate;
+
+    const estoque = this.estoqueRepository.buscarPorId(emprestimo.estoque_id);
+    if (estoque) {
+      estoque.quantidade_emprestada--;
+      estoque.disponivel = estoque.quantidade > estoque.quantidade_emprestada;
     }
 
-    atualizarEmprestimo(id: number, dados: any): boolean {
-        const {usuario_id, estoque_id, data_emprestimo, data_devolucao, data_entrega, dias_atraso, suspensao_ate} = dados
-
-        if (usuario_id === undefined || estoque_id === undefined || !data_emprestimo || !data_devolucao || !data_entrega || dias_atraso === undefined || !suspensao_ate) {
-            throw new Error("Todos os campos obrigatórios devem ser informados.")
-        }
-
-        return this.emprestimoRepository.atualizar(
-            id,
-            usuario_id,
-            estoque_id,
-            new Date(data_emprestimo),
-            new Date(data_devolucao),
-            new Date(data_entrega),
-            dias_atraso,
-            new Date(suspensao_ate)
-        )
+    if (atraso > 0) {
+      const usuario = this.usuarioRepository.buscarPorCPF(emprestimo.usuario_cpf);
+      if (usuario) {
+        usuario.status = 3;
+      }
     }
+
+    return true;
+  }
+
+  listarEmprestimos(): EmprestimoEntity[] {
+    return this.emprestimoRepository.listar();
+  }
+
+  buscarPorId(id: number): EmprestimoEntity | undefined {
+    return this.emprestimoRepository.buscarPorId(id);
+  }
 }

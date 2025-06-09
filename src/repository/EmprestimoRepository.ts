@@ -25,11 +25,11 @@ export class EmprestimoRepository {
         return this.emprestimoList.find(e => e.id === id)
     }
 
-    atualizar(id: number, usuario_id: number, estoque_id: number, data_emprestimo: Date, data_devolucao: Date, data_entrega: Date, dias_atraso: number, suspensao_ate: Date): boolean {
+    atualizar(id: number, usuario_cpf: string, estoque_id: number, data_emprestimo: Date, data_devolucao: Date, data_entrega: Date, dias_atraso: number, suspensao_ate: Date): boolean {
         const emprestimo = this.buscarPorId(id)
         if (!emprestimo) return false
 
-        emprestimo.usuario_id = usuario_id
+        emprestimo.usuario_cpf = usuario_cpf
         emprestimo.estoque_id = estoque_id
         emprestimo.data_emprestimo = data_emprestimo
         emprestimo.data_devolucao = data_devolucao
