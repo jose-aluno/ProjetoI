@@ -42,9 +42,9 @@ app.put("/library/emprestimos/:id/devolucao", emprestimoController.registrarDevo
 
 // Rotas de estoque
 app.get("/library/estoque", estoqueController.listarEstoque.bind(estoqueController));
-app.get("/library/estoque/:id", estoqueController.buscarExemplarPorId.bind(estoqueController));
+app.get("/library/estoque/:id", estoqueController.buscarPorISBN.bind(estoqueController));
 app.post("/library/estoque", estoqueController.cadastrarExemplar.bind(estoqueController));
-app.put("/library/estoque/:id", estoqueController.atualizarEstoque.bind(estoqueController));
+app.put("/library/estoque/:id", estoqueController.registrarDevolucao.bind(estoqueController));
 app.delete("/library/estoque/:id", estoqueController.removerExemplar.bind(estoqueController));
 
 app.listen(port, () => {

@@ -25,11 +25,11 @@ export class EstoqueRepository {
         return this.estoqueList.find(e => e.id === id)
     }
 
-    atualizar(id: number, livro_id: number, quantidade: number, quantidade_emprestada: number, disponivel: boolean): boolean {
+    atualizar(id: number, livro_isbn: string, quantidade: number, quantidade_emprestada: number, disponivel: boolean): boolean {
         const estoque = this.buscarPorId(id)
         if (!estoque) return false
 
-        estoque.livro_id = livro_id
+        estoque.livro_isbn = livro_isbn
         estoque.quantidade = quantidade
         estoque.quantidade_emprestada = quantidade_emprestada
         estoque.disponivel = disponivel

@@ -6,7 +6,7 @@ export class EstoqueController {
 
   listarEstoque(req: Request, res: Response): void {
     try {
-      const estoques = this.estoqueService.listarEstoques();
+      const estoques = this.estoqueService.listarTodos();
       res.status(200).json(estoques);
     } catch (error: unknown) {
       res.status(400).json({
@@ -15,21 +15,19 @@ export class EstoqueController {
     }
   }
 
-  buscarExemplarPorId(req: Request, res: Response): void {
+  buscarPorISBN(req: Request, res: Response): void {
     try {
-      const { id } = req.params;
-      const estoque = this.estoqueService.buscarPorId(Number(id));
-      res.status(200).json(estoque);
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao buscar exemplar."
-      });
+      const { isbn } = req.params;
+      const lista = this.estoqueService.buscarPorISBN(isbn);
+      res.status(200).json(lista);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
     }
   }
 
   cadastrarExemplar(req: Request, res: Response): void {
     try {
-      const estoque = this.estoqueService.cadastrarEstoque(req.body);
+      const estoque = this.estoqueService.cadastrar(req.body);
       res.status(201).json({ message: "Exemplar cadastrado com sucesso!", estoque });
     } catch (error: unknown) {
       res.status(400).json({
@@ -38,28 +36,23 @@ export class EstoqueController {
     }
   }
 
-  atualizarEstoque(req: Request, res: Response): void {
+  registrarDevolucao(req: Request, res: Response): void {
     try {
       const { id } = req.params;
-      const atualizado = this.estoqueService.atualizarEstoque(Number(id), req.body);
-      res.status(200).json({ message: "Estoque atualizado com sucesso!", atualizado });
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao atualizar estoque."
-      });
+      const atualizado = this.estoqueService.registrarDevolucao(Number(id));
+      res.status(200).json({ message: "Devolução registrada com sucesso!", atualizado });
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
     }
   }
 
   removerExemplar(req: Request, res: Response): void {
     try {
       const { id } = req.params;
-      const estoque = this.estoqueService.buscarPorId(Number(id));
-      this.estoqueService.removerEstoque(Number(id));
-      res.status(200).json({ message: "Exemplar removido com sucesso!", estoque });
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao remover exemplar."
-      });
+      this.estoqueService.remover(Number(id));
+      res.status(200).json({ message: "Exemplar removido com sucesso!" });
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
     }
   }
 }
