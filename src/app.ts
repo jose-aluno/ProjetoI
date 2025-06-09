@@ -3,6 +3,7 @@ import { UsuarioController } from "./controller/UsuarioController"
 import { CatalogoController } from "./controller/CatalogoController"
 import { LivroController } from "./controller/LivroController"
 import { EmprestimoController } from "./controller/EmprestimoController"
+import { EstoqueController } from "./controller/EstoqueController"
 
 const app = express()
 const port = 3090
@@ -11,6 +12,7 @@ const usuarioController = new UsuarioController()
 const catalogoController = new CatalogoController()
 const livroController = new LivroController()
 const emprestimoController = new EmprestimoController()
+const estoqueController = new EstoqueController()
 
 app.use(express.json());
 
@@ -37,6 +39,13 @@ app.delete("/library/livros/:isbn", livroController.removerLivro.bind(livroContr
 app.get("/library/emprestimos", emprestimoController.listarEmprestimos.bind(emprestimoController));
 app.post("/library/emprestimos", emprestimoController.cadastrarEmprestimo.bind(emprestimoController));
 app.put("/library/emprestimos/:id/devolucao", emprestimoController.registrarDevolucao.bind(emprestimoController));
+
+// Rotas de estoque
+app.get("/library/estoque", estoqueController.listarEstoque.bind(estoqueController));
+app.get("/library/estoque/:id", estoqueController.buscarExemplarPorId.bind(estoqueController));
+app.post("/library/estoque", estoqueController.cadastrarExemplar.bind(estoqueController));
+app.put("/library/estoque/:id", estoqueController.atualizarEstoque.bind(estoqueController));
+app.delete("/library/estoque/:id", estoqueController.removerExemplar.bind(estoqueController));
 
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}/library`)
