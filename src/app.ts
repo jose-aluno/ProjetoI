@@ -4,6 +4,7 @@ import { CatalogoController } from "./controller/CatalogoController"
 import { LivroController } from "./controller/LivroController"
 import { EmprestimoController } from "./controller/EmprestimoController"
 import { EstoqueController } from "./controller/EstoqueController"
+//import './popularRepositories'
 
 const app = express()
 const port = 3090
@@ -46,6 +47,9 @@ app.get("/library/estoque/:id", estoqueController.buscarPorISBN.bind(estoqueCont
 app.post("/library/estoque", estoqueController.cadastrarExemplar.bind(estoqueController));
 app.put("/library/estoque/:id", estoqueController.registrarDevolucao.bind(estoqueController));
 app.delete("/library/estoque/:id", estoqueController.removerExemplar.bind(estoqueController));
+
+//Rota para verificar os empréstimos em atraso e aplicar suspensão nos usuários sem a necessidade de realizar a devolução.
+app.post("/library/emprestimos/verificar-suspensoes", emprestimoController.verificarSuspensoes.bind(emprestimoController));
 
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}/library`)

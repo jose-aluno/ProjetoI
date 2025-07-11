@@ -103,4 +103,34 @@ export class EmprestimoService {
   buscarPorId(id: number): EmprestimoEntity | undefined {
     return this.emprestimoRepository.buscarPorId(id);
   }
+
+  async verificarSuspensoesEmLotes(batchSize = 1000): Promise<void> {
+    let offset = 0;
+    let lote: EmprestimoEntity[];
+
+    const hoje = new Date();
+    const usuariosSuspensos = new Set<string>();
+
+    do {
+      lote = this.emprestimoRepository.buscarAtrasadosNaoDevolvidos(batchSize, offset);
+      for (const emprestimo of lote) {
+        if (usuariosSuspensos.has(emprestimo.usuario_cpf)) continue;
+
+        const atrasoDias = Math.ceil((hoje.getTime() - emprestimo.data_devolucao.getTime()) / (1000 * 60 * 60 * 24));
+        const suspensao_ate = new Date(hoje.getTime() + atrasoDias * 3 * 24 * 60 * 60 * 1000);
+
+        emprestimo.dias_atraso = atrasoDias;
+        emprestimo.suspensao_ate = suspensao_ate;
+
+        const usuario = this.usuarioRepository.buscarPorCPF(emprestimo.usuario_cpf);
+        if (usuario) {
+          usuario.status = 3;
+          usuariosSuspensos.add(usuario.cpf);
+        }
+      }
+
+      offset += batchSize;
+    } while (lote.length === batchSize);
+  }
+
 }

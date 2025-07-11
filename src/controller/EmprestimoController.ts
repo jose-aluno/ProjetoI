@@ -37,4 +37,15 @@ export class EmprestimoController {
       });
     }
   }
+
+  async verificarSuspensoes(req: Request, res: Response): Promise<void> {
+    try {
+      await this.emprestimoService.verificarSuspensoesEmLotes();
+      res.status(200).json({ message: "Verificação de suspensões concluída com sucesso." });
+    } catch (error: any) {
+      res.status(500).json({
+         message: error instanceof Error ? error.message : "Erro interno." 
+      });
+    }
+  }
 }

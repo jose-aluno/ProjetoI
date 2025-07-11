@@ -39,4 +39,16 @@ export class EmprestimoRepository {
 
         return true
     }
+
+    buscarAtrasadosNaoDevolvidos(limit: number, offset: number): EmprestimoEntity[] {
+    const hoje = new Date();
+    return this.emprestimoList
+        .filter(e =>
+        e.data_entrega === null &&
+        e.data_devolucao < hoje &&
+        !e.suspensao_ate
+        )
+        .slice(offset, offset + limit);
+    }
+
 }
