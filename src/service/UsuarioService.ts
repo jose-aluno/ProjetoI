@@ -15,10 +15,6 @@ export class UsuarioService {
             throw new Error("Todos os campos obrigatórios devem ser informados.");
         }
 
-        if (!this.validarCPF(cpf)) {
-            throw new Error("CPF inválido.");
-        }
-
         const existente = this.usuarioRepository.buscarPorCPF(cpf);
         if (existente) {
             throw new Error("CPF já cadastrado.");
@@ -120,24 +116,4 @@ export class UsuarioService {
     removerUsuario(cpf: string): boolean {
         return this.usuarioRepository.remover(cpf)
     }
-
-    private validarCPF(cpf: string): boolean {
-        if (!/^\d{11}$/.test(cpf)) return false;
-        if (/^(\d)\1{10}$/.test(cpf)) return false;
-
-        const calcDV = (cpf: string, pesoInicial: number): number => {
-            let soma = 0;
-            for (let i = 0; i < pesoInicial - 1; i++) {
-                soma += parseInt(cpf[i]) * (pesoInicial - i);
-            }
-            const resto = soma % 11;
-            return resto < 2 ? 0 : 11 - resto;
-        };
-
-        const dv1 = calcDV(cpf, 10);
-        const dv2 = calcDV(cpf, 11);
-
-        return dv1 === parseInt(cpf[9]) && dv2 === parseInt(cpf[10]);
-    }
-
 }
