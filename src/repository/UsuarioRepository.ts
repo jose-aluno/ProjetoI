@@ -19,15 +19,13 @@ export class UsuarioRepository {
 
     private async createTable() {
         const query = `CREATE TABLE IF NOT EXISTS library.Usuario(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nome VARCHAR(150) NOT NULL,
-        cpf VARCHAR(14) UNIQUE NOT NULL,
-        email VARCHAR(100) NOT NULL,
-        status INT DEFAULT 1,
-        categoria_id INT NOT NULL,
-        curso_id INT NOT NULL,
-        FOREIGN KEY (categoria_id) REFERENCES CategoriaUsuario(id),
-        FOREIGN KEY (curso_id) REFERENCES Curso(id)
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nome VARCHAR(150) NOT NULL,
+            cpf VARCHAR(14) UNIQUE NOT NULL,
+            email VARCHAR(100) NOT NULL,
+            status INT DEFAULT 1,
+            categoria_id INT NOT NULL,
+            curso_id INT NOT NULL
         )`;
         try {
             await executarComandoSQL(query, []);
@@ -51,7 +49,7 @@ export class UsuarioRepository {
         const resultado = await executarComandoSQL(`SELECT id, nome, cpf, email, status, categoria_id, curso_id FROM library.Usuario ORDER BY nome`, []);
         
         return resultado.map((row: any) => 
-            new UsuarioEntity(row.id, row.nome, row.cpf, row.email, row.status, row.categoria_id, row.curso_id)
+            new UsuarioEntity(row.id, row.nome, row.cpf, row.status, row.email, row.categoria_id, row.curso_id)
         );
     }
 
@@ -63,7 +61,7 @@ export class UsuarioRepository {
         }
         
         const row = resultado[0];
-        return new UsuarioEntity(row.id, row.nome, row.cpf, row.email, row.status, row.categoria_id, row.curso_id);
+        return new UsuarioEntity(row.id, row.nome, row.cpf, row.status, row.email, row.categoria_id, row.curso_id);
     }
 
     async atualizar(cpf: string, nome: string, status: number, email: string, categoria_id: number, curso_id: number): Promise<boolean> {
