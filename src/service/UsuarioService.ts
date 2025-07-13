@@ -32,7 +32,7 @@ export class UsuarioService {
             throw new Error("Categoria de usuário inexistente.");
         }
 
-        const cursos = this.cursoRepository.listar();
+        const cursos = await this.cursoRepository.listar();
         let cursoExiste = false;
         for (let i = 0; i < cursos.length; i++) {
             if (cursos[i].id === curso_id) {
@@ -93,7 +93,7 @@ export class UsuarioService {
             throw new Error("Categoria de usuário inexistente.");
         }
 
-        const cursos = this.cursoRepository.listar();
+        const cursos = await this.cursoRepository.listar();
         let cursoExiste = false;
         for (let i = 0; i < cursos.length; i++) {
             if (cursos[i].id === curso_id) {
