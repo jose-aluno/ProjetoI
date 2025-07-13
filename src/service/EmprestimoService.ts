@@ -17,7 +17,7 @@ export class EmprestimoService {
       throw new Error("Campos 'cpf' e 'estoque_id' são obrigatórios.");
     }
 
-    const usuario = this.usuarioRepository.buscarPorCPF(cpf);
+    const usuario = await this.usuarioRepository.buscarPorCPF(cpf);
     if (!usuario) throw new Error("Usuário não encontrado.");
     if (usuario.status !== 1) throw new Error("Usuário não está ativo.");
 
@@ -63,7 +63,7 @@ export class EmprestimoService {
     return emprestimo;
   }
 
-  atualizarEmprestimo(id: number): boolean {
+  async atualizarEmprestimo(id: number): Promise<boolean> {
     const emprestimo = this.emprestimoRepository.buscarPorId(id);
     if (!emprestimo) throw new Error("Empréstimo não encontrado.");
     if (emprestimo.data_entrega) throw new Error("Este empréstimo já foi devolvido.");
@@ -87,7 +87,7 @@ export class EmprestimoService {
     }
 
     if (atraso > 0) {
-      const usuario = this.usuarioRepository.buscarPorCPF(emprestimo.usuario_cpf);
+      const usuario = await this.usuarioRepository.buscarPorCPF(emprestimo.usuario_cpf);
       if (usuario) {
         const emprestimosAtrasados = this.emprestimoRepository.contarEmprestimosAtrasados(emprestimo.usuario_cpf);
         
@@ -129,7 +129,7 @@ export class EmprestimoService {
         emprestimo.dias_atraso = atrasoDias;
         emprestimo.suspensao_ate = suspensao_ate;
 
-        const usuario = this.usuarioRepository.buscarPorCPF(emprestimo.usuario_cpf);
+        const usuario = await this.usuarioRepository.buscarPorCPF(emprestimo.usuario_cpf);
         if (usuario) {
           const emprestimosAtrasados = this.emprestimoRepository.contarEmprestimosAtrasados(emprestimo.usuario_cpf);
           
@@ -147,8 +147,8 @@ export class EmprestimoService {
     } while (lote.length === batchSize);
   }
 
-  verificarStatusSuspensaoUsuario(cpf: string): void {
-    const usuario = this.usuarioRepository.buscarPorCPF(cpf);
+  async verificarStatusSuspensaoUsuario(cpf: string): Promise<void> {
+    const usuario = await this.usuarioRepository.buscarPorCPF(cpf);
     if (!usuario) return;
 
     const emprestimosAtrasados = this.emprestimoRepository.contarEmprestimosAtrasados(cpf);

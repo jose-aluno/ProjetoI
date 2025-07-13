@@ -15,7 +15,7 @@ export class UsuarioService {
             throw new Error("Todos os campos obrigatórios devem ser informados.");
         }
 
-        const existente = this.usuarioRepository.buscarPorCPF(cpf);
+        const existente = await this.usuarioRepository.buscarPorCPF(cpf);
         if (existente) {
             throw new Error("CPF já cadastrado.");
         }
@@ -54,16 +54,16 @@ export class UsuarioService {
             curso_id
         );
 
-        this.usuarioRepository.inserir(novoUsuario);
+        await this.usuarioRepository.inserir(novoUsuario);
         return novoUsuario;
     }
 
-    listarUsuarios(): UsuarioEntity[] {
-        return this.usuarioRepository.listar()
+    async listarUsuarios(): Promise<UsuarioEntity[]> {
+        return await this.usuarioRepository.listar()
     }
 
-    buscarPorCPF(cpf: string): UsuarioEntity | undefined {
-        const usuarioExistente = this.usuarioRepository.buscarPorCPF(cpf);
+    async buscarPorCPF(cpf: string): Promise<UsuarioEntity | undefined> {
+        const usuarioExistente = await this.usuarioRepository.buscarPorCPF(cpf);
         if (!usuarioExistente) {
             throw new Error("Usuário não encontrado.");
         }
@@ -105,15 +105,15 @@ export class UsuarioService {
             throw new Error("Curso inexistente.");
         }
 
-        const usuario = this.usuarioRepository.buscarPorCPF(cpf);
+        const usuario = await this.usuarioRepository.buscarPorCPF(cpf);
         if (!usuario) {
             throw new Error("Usuário não encontrado.");
         }
 
-        return this.usuarioRepository.atualizar(cpf, nome, status, email, categoria_id, curso_id);
+        return await this.usuarioRepository.atualizar(cpf, nome, status, email, categoria_id, curso_id);
     }
 
-    removerUsuario(cpf: string): boolean {
-        return this.usuarioRepository.remover(cpf)
+    async removerUsuario(cpf: string): Promise<boolean> {
+        return await this.usuarioRepository.remover(cpf)
     }
 }
