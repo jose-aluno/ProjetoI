@@ -1,58 +1,73 @@
-import { Request, Response } from "express";
+import { Body, Controller, Delete, Get, Path, Post, Put, Res, Route, Tags, TsoaResponse } from "tsoa";
 import { EstoqueService } from "../service/EstoqueService";
+import { BasicResponseDto } from "../model/dto/BasicResponseDto";
+import { CadastrarEstoqueDTO } from "../model/dto/EstoqueDto";
 
-export class EstoqueController {
+@Route("estoque")
+@Tags("estoque")
+export class EstoqueController extends Controller {
   private estoqueService = new EstoqueService();
 
-  listarEstoque(req: Request, res: Response): void {
+  @Get()
+  async listarEstoque(
+    @Res() success: TsoaResponse<200, BasicResponseDto>,
+    @Res() serverError: TsoaResponse<500, BasicResponseDto>
+  ) {
     try {
-      const estoques = this.estoqueService.listarTodos();
-      res.status(200).json(estoques);
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao listar estoque."
-      });
+      const estoques = await this.estoqueService.listarTodos();
+      return success(200, new BasicResponseDto("Estoque listado com sucesso!", estoques));
+    } catch (error: any) {
+      return serverError(500, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  buscarPorISBN(req: Request, res: Response): void {
+  @Get("{isbn}")
+  async buscarEstoquePorISBN(
+    @Path() isbn: string,
+    @Res() success: TsoaResponse<200, BasicResponseDto>,
+    @Res() notFound: TsoaResponse<404, BasicResponseDto>,
+    @Res() badRequest: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const { isbn } = req.params;
-      const lista = this.estoqueService.buscarPorISBN(isbn);
-      res.status(200).json(lista);
-    } catch (error) {
-      res.status(400).json({ message: (error as Error).message });
+      const lista = await this.estoqueService.buscarPorISBN(isbn);
+      if (!lista || lista.length === 0) {
+        return notFound(404, new BasicResponseDto("Nenhum exemplar encontrado para o ISBN informado.", undefined));
+      }
+      return success(200, new BasicResponseDto("Exemplares encontrados com sucesso!", lista));
+    } catch (error: any) {
+      return badRequest(400, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  cadastrarExemplar(req: Request, res: Response): void {
+  @Post()
+  async cadastrarExemplar(
+    @Body() body: CadastrarEstoqueDTO,
+    @Res() created: TsoaResponse<201, BasicResponseDto>,
+    @Res() badRequest: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const estoque = this.estoqueService.cadastrar(req.body);
-      res.status(201).json({ message: "Exemplar cadastrado com sucesso!", estoque });
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao cadastrar exemplar."
-      });
+      const estoque = await this.estoqueService.cadastrar(body);
+      return created(201, new BasicResponseDto("Exemplar cadastrado com sucesso!", estoque));
+    } catch (error: any) {
+      return badRequest(400, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  registrarDevolucao(req: Request, res: Response): void {
+  @Delete("{id}")
+  async removerExemplar(
+    @Path() id: number,
+    @Res() success: TsoaResponse<200, BasicResponseDto>,
+    @Res() notFound: TsoaResponse<404, BasicResponseDto>,
+    @Res() badRequest: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const { id } = req.params;
-      const atualizado = this.estoqueService.registrarDevolucao(Number(id));
-      res.status(200).json({ message: "Devolução registrada com sucesso!", atualizado });
-    } catch (error) {
-      res.status(400).json({ message: (error as Error).message });
-    }
-  }
-
-  removerExemplar(req: Request, res: Response): void {
-    try {
-      const { id } = req.params;
-      this.estoqueService.remover(Number(id));
-      res.status(200).json({ message: "Exemplar removido com sucesso!" });
-    } catch (error) {
-      res.status(400).json({ message: (error as Error).message });
+      const removido = await this.estoqueService.remover(id);
+      if (!removido) {
+        return notFound(404, new BasicResponseDto("Exemplar não encontrado para remoção.", undefined));
+      }
+      return success(200, new BasicResponseDto("Exemplar removido com sucesso!", undefined));
+    } catch (error: any) {
+      return badRequest(400, new BasicResponseDto(error.message, undefined));
     }
   }
 }

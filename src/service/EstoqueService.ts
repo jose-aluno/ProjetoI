@@ -46,33 +46,6 @@ export class EstoqueService {
     return await this.estoqueRepository.listarDisponiveis();
   }
 
-  async registrarDevolucao(id: number): Promise<EstoqueEntity> {
-    const estoque = await this.estoqueRepository.buscarPorId(id);
-
-    if (!estoque) {
-      throw new Error("Exemplar não encontrado.");
-    }
-
-    if (estoque.quantidade_emprestada <= 0) {
-      throw new Error("Nenhum exemplar emprestado para devolução.");
-    }
-
-    // Usar o método do repositório para atualizar
-    const sucesso = await this.estoqueRepository.atualizarQuantidade(
-      id,
-      estoque.quantidade,
-      estoque.quantidade_emprestada - 1
-    );
-
-    if (!sucesso) {
-      throw new Error("Erro ao registrar devolução.");
-    }
-
-    // Retornar o estoque atualizado
-    const estoqueAtualizado = await this.estoqueRepository.buscarPorId(id);
-    return estoqueAtualizado!;
-  }
-
   async atualizar(id: number, dados: any): Promise<boolean> {
     const { livro_isbn, quantidade, quantidade_emprestada } = dados;
 
