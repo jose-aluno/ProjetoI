@@ -89,7 +89,13 @@ export class EmprestimoService {
     if (atraso > 0) {
       const usuario = this.usuarioRepository.buscarPorCPF(emprestimo.usuario_cpf);
       if (usuario) {
-        usuario.status = 3;
+        const emprestimosAtrasados = this.emprestimoRepository.contarEmprestimosAtrasados(emprestimo.usuario_cpf);
+        
+        if (emprestimosAtrasados >= 2) {
+          usuario.status = 0; 
+        } else {
+          usuario.status = 2;
+        }
       }
     }
 
@@ -109,12 +115,13 @@ export class EmprestimoService {
     let lote: EmprestimoEntity[];
 
     const hoje = new Date();
-    const usuariosSuspensos = new Set<string>();
+    const usuariosProcessados = new Set<string>();
 
     do {
       lote = this.emprestimoRepository.buscarAtrasadosNaoDevolvidos(batchSize, offset);
+      
       for (const emprestimo of lote) {
-        if (usuariosSuspensos.has(emprestimo.usuario_cpf)) continue;
+        if (usuariosProcessados.has(emprestimo.usuario_cpf)) continue;
 
         const atrasoDias = Math.ceil((hoje.getTime() - emprestimo.data_devolucao.getTime()) / (1000 * 60 * 60 * 24));
         const suspensao_ate = new Date(hoje.getTime() + atrasoDias * 3 * 24 * 60 * 60 * 1000);
@@ -124,8 +131,15 @@ export class EmprestimoService {
 
         const usuario = this.usuarioRepository.buscarPorCPF(emprestimo.usuario_cpf);
         if (usuario) {
-          usuario.status = 3;
-          usuariosSuspensos.add(usuario.cpf);
+          const emprestimosAtrasados = this.emprestimoRepository.contarEmprestimosAtrasados(emprestimo.usuario_cpf);
+          
+          if (emprestimosAtrasados >= 2) {
+            usuario.status = 0; 
+          } else {
+            usuario.status = 2;
+          }
+          
+          usuariosProcessados.add(usuario.cpf);
         }
       }
 
@@ -133,4 +147,18 @@ export class EmprestimoService {
     } while (lote.length === batchSize);
   }
 
+  verificarStatusSuspensaoUsuario(cpf: string): void {
+    const usuario = this.usuarioRepository.buscarPorCPF(cpf);
+    if (!usuario) return;
+
+    const emprestimosAtrasados = this.emprestimoRepository.contarEmprestimosAtrasados(cpf);
+    
+    if (emprestimosAtrasados >= 2) {
+      usuario.status = 0; // Inativo
+    } else if (emprestimosAtrasados === 1) {
+      usuario.status = 2; // Suspenso
+    } else {
+      usuario.status = 1; // Ativo (sem atrasos)
+    }
+  }
 }

@@ -41,14 +41,22 @@ export class EmprestimoRepository {
     }
 
     buscarAtrasadosNaoDevolvidos(limit: number, offset: number): EmprestimoEntity[] {
-    const hoje = new Date();
-    return this.emprestimoList
-        .filter(e =>
-        e.data_entrega === null &&
-        e.data_devolucao < hoje &&
-        !e.suspensao_ate
-        )
-        .slice(offset, offset + limit);
+        const hoje = new Date();
+        return this.emprestimoList
+            .filter(e =>
+                e.data_entrega === null &&
+                e.data_devolucao < hoje &&
+                !e.suspensao_ate
+            )
+            .slice(offset, offset + limit);
     }
 
+    contarEmprestimosAtrasados(cpf: string): number {
+        const hoje = new Date();
+        return this.emprestimoList.filter(e =>
+            e.usuario_cpf === cpf &&
+            e.data_entrega === null &&
+            e.data_devolucao < hoje
+        ).length;
+    }
 }
