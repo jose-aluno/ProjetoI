@@ -1,51 +1,68 @@
-import { Request, Response } from "express";
+import { Body, Controller, Get, Path, Post, Put, Res, Route, Tags, TsoaResponse } from "tsoa";
 import { EmprestimoService } from "../service/EmprestimoService";
+import { BasicResponseDto } from "../model/dto/BasicResponseDto";
+import { CadastrarEmprestimoDTO } from "../model/dto/EmprestimoDto";
 
-export class EmprestimoController {
+@Route("emprestimos")
+@Tags("emprestimos")
+export class EmprestimoController extends Controller {
   private emprestimoService = new EmprestimoService();
 
-  listarEmprestimos(req: Request, res: Response): void {
+  @Get()
+  async listarEmprestimos(
+    @Res() success: TsoaResponse<200, BasicResponseDto>,
+    @Res() serverError: TsoaResponse<500, BasicResponseDto>
+  ) {
     try {
-      const emprestimos = this.emprestimoService.listarEmprestimos();
-      res.status(200).json(emprestimos);
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao listar empréstimos."
-      });
+      const emprestimos = await this.emprestimoService.listarEmprestimos();
+      return success(200, new BasicResponseDto("Empréstimos listados com sucesso!", emprestimos));
+    } catch (error: any) {
+      return serverError(500, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  cadastrarEmprestimo(req: Request, res: Response): void {
+  @Post()
+  async cadastrarEmprestimo(
+    @Body() body: CadastrarEmprestimoDTO,
+    @Res() created: TsoaResponse<201, BasicResponseDto>,
+    @Res() badRequest: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const emprestimo = this.emprestimoService.cadastrarEmprestimo(req.body);
-      res.status(201).json({ message: "Empréstimo registrado com sucesso!", emprestimo });
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao registrar empréstimo."
-      });
+      const emprestimo = await this.emprestimoService.cadastrarEmprestimo(body);
+      return created(201, new BasicResponseDto("Empréstimo registrado com sucesso!", emprestimo));
+    } catch (error: any) {
+      return badRequest(400, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  registrarDevolucao(req: Request, res: Response): void {
+  @Put("{id}/devolucao")
+  async registrarDevolucao(
+    @Path() id: number,
+    @Res() success: TsoaResponse<200, BasicResponseDto>,
+    @Res() notFound: TsoaResponse<404, BasicResponseDto>,
+    @Res() badRequest: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const { id } = req.params;
-      const atualizado = this.emprestimoService.atualizarEmprestimo(Number(id));
-      res.status(200).json({ message: "Empréstimo atualizado com sucesso!", atualizado });
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao atualizar empréstimo."
-      });
+      const atualizado = await this.emprestimoService.atualizarEmprestimo(id);
+      if (!atualizado) {
+        return notFound(404, new BasicResponseDto("Empréstimo não encontrado para devolução.", undefined));
+      }
+      return success(200, new BasicResponseDto("Empréstimo atualizado com sucesso!", atualizado));
+    } catch (error: any) {
+      return badRequest(400, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  async verificarSuspensoes(req: Request, res: Response): Promise<void> {
+  @Post("verificar-suspensoes")
+  async verificarSuspensoes(
+    @Res() success: TsoaResponse<200, BasicResponseDto>,
+    @Res() serverError: TsoaResponse<500, BasicResponseDto>
+  ) {
     try {
       await this.emprestimoService.verificarSuspensoesEmLotes();
-      res.status(200).json({ message: "Verificação de suspensões concluída com sucesso." });
+      return success(200, new BasicResponseDto("Verificação de suspensões concluída com sucesso.", undefined));
     } catch (error: any) {
-      res.status(500).json({
-         message: error instanceof Error ? error.message : "Erro interno." 
-      });
+      return serverError(500, new BasicResponseDto(error.message, undefined));
     }
   }
 }
