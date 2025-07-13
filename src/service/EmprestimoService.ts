@@ -19,21 +19,22 @@ export class EmprestimoService {
 
     const usuario = await this.usuarioRepository.buscarPorCPF(cpf);
     if (!usuario) throw new Error("Usuário não encontrado.");
-    if (usuario.status !== 1) throw new Error("Usuário não está ativo.");
+    if (Number(usuario.status) != 1) throw new Error("Usuário não está ativo.");
 
-    const estoque = this.estoqueRepository.buscarPorId(estoque_id);
+    const estoque = await this.estoqueRepository.buscarPorId(estoque_id);
     if (!estoque) throw new Error("Exemplar não encontrado.");
     if (!estoque.disponivel) throw new Error("Exemplar indisponível.");
 
     const livro = await this.livroRepository.buscarPorISBN(estoque.livro_isbn);
     if (!livro) throw new Error("Livro não encontrado.");
 
-    const emprestimosUsuario = this.emprestimoRepository.listar().filter(e =>
+    const emprestimosUsuario = await this.emprestimoRepository.listar();
+    const emprestimosAtivos = emprestimosUsuario.filter(e =>
       e.usuario_cpf === cpf && e.data_entrega === null
     );
 
     const limite = usuario.categoria_id === 1 ? 5 : 3;
-    if (emprestimosUsuario.length >= limite) {
+    if (emprestimosAtivos.length >= limite) {
       throw new Error(`Usuário já atingiu o limite de empréstimos (${limite}).`);
     }
 
@@ -56,15 +57,18 @@ export class EmprestimoService {
       null
     );
 
-    estoque.quantidade_emprestada++;
-    estoque.disponivel = estoque.quantidade > estoque.quantidade_emprestada;
+    await this.estoqueRepository.atualizarQuantidade(
+      estoque_id,
+      estoque.quantidade,
+      estoque.quantidade_emprestada + 1
+    );
 
-    this.emprestimoRepository.inserir(emprestimo);
+    await this.emprestimoRepository.inserir(emprestimo);
     return emprestimo;
   }
 
   async atualizarEmprestimo(id: number): Promise<boolean> {
-    const emprestimo = this.emprestimoRepository.buscarPorId(id);
+    const emprestimo = await this.emprestimoRepository.buscarPorId(id);
     if (!emprestimo) throw new Error("Empréstimo não encontrado.");
     if (emprestimo.data_entrega) throw new Error("Este empréstimo já foi devolvido.");
 
@@ -76,38 +80,62 @@ export class EmprestimoService {
 
     const suspensao_ate = atraso > 0 ? new Date(hoje.getTime() + atraso * 3 * 24 * 60 * 60 * 1000) : null;
 
-    emprestimo.data_entrega = hoje;
-    emprestimo.dias_atraso = atraso;
-    emprestimo.suspensao_ate = suspensao_ate;
+    const sucesso = await this.emprestimoRepository.atualizar(
+      id,
+      emprestimo.usuario_cpf,
+      emprestimo.estoque_id,
+      emprestimo.data_emprestimo,
+      emprestimo.data_devolucao,
+      hoje,
+      atraso,
+      suspensao_ate
+    );
 
-    const estoque = this.estoqueRepository.buscarPorId(emprestimo.estoque_id);
+    const estoque = await this.estoqueRepository.buscarPorId(emprestimo.estoque_id);
     if (estoque) {
-      estoque.quantidade_emprestada--;
-      estoque.disponivel = estoque.quantidade > estoque.quantidade_emprestada;
+      await this.estoqueRepository.atualizarQuantidade(
+        emprestimo.estoque_id,
+        estoque.quantidade,
+        estoque.quantidade_emprestada - 1
+      );
     }
 
     if (atraso > 0) {
       const usuario = await this.usuarioRepository.buscarPorCPF(emprestimo.usuario_cpf);
       if (usuario) {
-        const emprestimosAtrasados = this.emprestimoRepository.contarEmprestimosAtrasados(emprestimo.usuario_cpf);
+        const emprestimosAtrasados = await this.emprestimoRepository.contarEmprestimosAtrasados(emprestimo.usuario_cpf);
         
         if (emprestimosAtrasados >= 2) {
-          usuario.status = 0; 
+          await this.usuarioRepository.atualizar(
+            usuario.cpf,
+            usuario.nome,
+            0, // Inativo
+            usuario.email,
+            usuario.categoria_id,
+            usuario.curso_id
+          );
         } else {
-          usuario.status = 2;
+          await this.usuarioRepository.atualizar(
+            usuario.cpf,
+            usuario.nome,
+            2, // Suspenso
+            usuario.email,
+            usuario.categoria_id,
+            usuario.curso_id
+          );
         }
       }
     }
 
-    return true;
+    return sucesso;
   }
 
-  listarEmprestimos(): EmprestimoEntity[] {
-    return this.emprestimoRepository.listar();
+  async listarEmprestimos(): Promise<EmprestimoEntity[]> {
+    return await this.emprestimoRepository.listar();
   }
 
-  buscarPorId(id: number): EmprestimoEntity | undefined {
-    return this.emprestimoRepository.buscarPorId(id);
+  async buscarPorId(id: number): Promise<EmprestimoEntity | undefined> {
+    return await this.emprestimoRepository.buscarPorId(id);
   }
 
   async verificarSuspensoesEmLotes(batchSize = 1000): Promise<void> {
@@ -118,7 +146,7 @@ export class EmprestimoService {
     const usuariosProcessados = new Set<string>();
 
     do {
-      lote = this.emprestimoRepository.buscarAtrasadosNaoDevolvidos(batchSize, offset);
+      lote = await this.emprestimoRepository.buscarAtrasadosNaoDevolvidos(batchSize, offset);
       
       for (const emprestimo of lote) {
         if (usuariosProcessados.has(emprestimo.usuario_cpf)) continue;
@@ -126,18 +154,36 @@ export class EmprestimoService {
         const atrasoDias = Math.ceil((hoje.getTime() - emprestimo.data_devolucao.getTime()) / (1000 * 60 * 60 * 24));
         const suspensao_ate = new Date(hoje.getTime() + atrasoDias * 3 * 24 * 60 * 60 * 1000);
 
-        emprestimo.dias_atraso = atrasoDias;
-        emprestimo.suspensao_ate = suspensao_ate;
+        await this.emprestimoRepository.atualizar(
+          emprestimo.id!,
+          emprestimo.usuario_cpf,
+          emprestimo.estoque_id,
+          emprestimo.data_emprestimo,
+          emprestimo.data_devolucao,
+          emprestimo.data_entrega,
+          atrasoDias,
+          suspensao_ate
+        );
 
         const usuario = await this.usuarioRepository.buscarPorCPF(emprestimo.usuario_cpf);
         if (usuario) {
-          const emprestimosAtrasados = this.emprestimoRepository.contarEmprestimosAtrasados(emprestimo.usuario_cpf);
+          const emprestimosAtrasados = await this.emprestimoRepository.contarEmprestimosAtrasados(emprestimo.usuario_cpf);
           
+          let novoStatus = 1; // Ativo
           if (emprestimosAtrasados >= 2) {
-            usuario.status = 0; 
-          } else {
-            usuario.status = 2;
+            novoStatus = 0; // Inativo
+          } else if (emprestimosAtrasados === 1) {
+            novoStatus = 2; // Suspenso
           }
+
+          await this.usuarioRepository.atualizar(
+            usuario.cpf,
+            usuario.nome,
+            novoStatus,
+            usuario.email,
+            usuario.categoria_id,
+            usuario.curso_id
+          );
           
           usuariosProcessados.add(usuario.cpf);
         }
@@ -151,14 +197,22 @@ export class EmprestimoService {
     const usuario = await this.usuarioRepository.buscarPorCPF(cpf);
     if (!usuario) return;
 
-    const emprestimosAtrasados = this.emprestimoRepository.contarEmprestimosAtrasados(cpf);
+    const emprestimosAtrasados = await this.emprestimoRepository.contarEmprestimosAtrasados(cpf);
     
+    let novoStatus = 1; // Ativo
     if (emprestimosAtrasados >= 2) {
-      usuario.status = 0; // Inativo
+      novoStatus = 0; // Inativo
     } else if (emprestimosAtrasados === 1) {
-      usuario.status = 2; // Suspenso
-    } else {
-      usuario.status = 1; // Ativo (sem atrasos)
+      novoStatus = 2; // Suspenso
     }
+
+    await this.usuarioRepository.atualizar(
+      usuario.cpf,
+      usuario.nome,
+      novoStatus,
+      usuario.email,
+      usuario.categoria_id,
+      usuario.curso_id
+    );
   }
 }

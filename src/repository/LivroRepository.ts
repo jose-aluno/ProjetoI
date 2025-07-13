@@ -19,14 +19,13 @@ export class LivroRepository {
 
     private async createTable() {
         const query = `CREATE TABLE IF NOT EXISTS library.Livro(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        titulo VARCHAR(200) NOT NULL,
-        autor VARCHAR(150) NOT NULL,
-        editora VARCHAR(100) NOT NULL,
-        edicao VARCHAR(50) NOT NULL,
-        isbn VARCHAR(20) UNIQUE NOT NULL,
-        categoria_id INT NOT NULL,
-        FOREIGN KEY (categoria_id) REFERENCES CategoriaLivro(id)
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            titulo VARCHAR(200) NOT NULL,
+            autor VARCHAR(150) NOT NULL,
+            editora VARCHAR(100) NOT NULL,
+            edicao VARCHAR(50) NOT NULL,
+            isbn VARCHAR(20) UNIQUE NOT NULL,
+            categoria_id INT NOT NULL
         )`;
         try {
         await executarComandoSQL(query, []);
