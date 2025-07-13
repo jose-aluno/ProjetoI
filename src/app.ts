@@ -4,7 +4,7 @@ import { CatalogoController } from "./controller/CatalogoController"
 import { LivroController } from "./controller/LivroController"
 import { EmprestimoController } from "./controller/EmprestimoController"
 import { EstoqueController } from "./controller/EstoqueController"
-//import './popularRepositories'
+import { inicializarTabelas } from "./database/initializer"
 
 const app = express()
 const port = 3090
@@ -51,6 +51,13 @@ app.delete("/library/estoque/:id", estoqueController.removerExemplar.bind(estoqu
 //Rota para verificar os empréstimos em atraso e aplicar suspensão nos usuários sem a necessidade de realizar a devolução.
 app.post("/library/emprestimos/verificar-suspensoes", emprestimoController.verificarSuspensoes.bind(emprestimoController));
 
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}/library`)
-});
+async function main() {
+  await inicializarTabelas()
+  app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}/library`)
+  })
+}
+
+main().catch((err) => {
+  console.error("Erro ao iniciar o servidor:", err)
+})

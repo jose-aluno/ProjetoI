@@ -17,3 +17,17 @@ mysqlConnection.connect((err) => {
     }
     console.log('Conexão bem-sucedida com o banco de dados MySQL')
 })
+
+function executarComandoSQL(query: string, valores: any[]): Promise<any> {
+  return new Promise<any>((resolve, reject) => {
+    mysqlConnection.query(query, valores, (err, resultado) => {
+      if (err) {
+        console.error(`Erro ao executar a query: ${err}`);
+        reject(err);
+      }
+      resolve(resultado);
+    });
+  });
+}
+
+export default executarComandoSQL;

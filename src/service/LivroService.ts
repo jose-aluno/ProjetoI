@@ -6,7 +6,7 @@ export class LivroService {
     private livroRepository = LivroRepository.getInstance()
     private categoriaLivroRepository = CategoriaLivroRepository.getInstance()
 
-    cadastrarLivro(dados: any): LivroEntity {
+    async cadastrarLivro(dados: any): Promise<LivroEntity> {
         const { titulo, isbn, autor, editora, edicao, categoria_id } = dados
 
         if (!titulo || !isbn || !autor || !editora || !edicao || !categoria_id) {
@@ -18,7 +18,7 @@ export class LivroService {
             throw new Error("Livro com este ISBN já está cadastrado.")
         }
 
-        const categorias = this.categoriaLivroRepository.listar()
+        const categorias = await this.categoriaLivroRepository.listar()
         let categoriaEncontrada = false
         for (let i = 0; i < categorias.length; i++) {
             if (categorias[i].id === categoria_id) {
@@ -64,7 +64,7 @@ export class LivroService {
         return this.livroRepository.buscarPorISBN(isbn)
     }
 
-    atualizarLivro(isbn: string, dados: any): boolean {
+    async atualizarLivro(isbn: string, dados: any): Promise<boolean> {
         const { titulo, autor, editora, edicao, categoria_id } = dados
 
         if (!titulo || !autor || !editora || !edicao || !categoria_id) {
@@ -76,7 +76,7 @@ export class LivroService {
             throw new Error("Livro não encontrado para atualização.")
         }
 
-        const categorias = this.categoriaLivroRepository.listar()
+        const categorias = await this.categoriaLivroRepository.listar()
         let categoriaValida = false
         for (let i = 0; i < categorias.length; i++) {
             if (categorias[i].id === categoria_id) {
