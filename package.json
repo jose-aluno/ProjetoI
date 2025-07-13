@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/app.js",
-    " build ": "npx tsoa spec-and-routes && npx tsc",
+    "build": "npx tsoa spec-and-routes && npx tsc",
     "dev": "ts-node src/app.ts"
   },
   "keywords": [],
