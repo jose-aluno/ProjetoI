@@ -1,33 +1,51 @@
-import { Request, Response } from "express";
+import { Body, Controller, Delete, Get, Path, Post, Put, Query, Res, Route, Tags, TsoaResponse } from "tsoa";
 import { CatalogoService } from "../service/CatalogoService";
+import { BasicResponseDto } from "../model/dto/BasicResponseDto";
+import { CategoriaUsuarioEntity } from "../model/entity/CategoriaUsuarioEntity";
+import { CategoriaLivroEntity } from "../model/entity/CategoriaLivroEntity";
+import { CursoEntity } from "../model/entity/CursoEntity";
 
-export class CatalogoController {
+@Route("catalogos")
+@Tags("catalogos")
+export class CatalogoController extends Controller {
   private catalogoService = new CatalogoService();
 
-  listarCategoriasLivro(req: Request, res: Response): void {
+  @Get("categorias-usuario")
+  async listarCategoriasUsuario(
+    @Res() sucess: TsoaResponse<200, BasicResponseDto>,
+    @Res() notFound: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const categorias = this.catalogoService.listarCategoriasLivro();
-      res.status(200).json(categorias);
-    } catch (error: unknown) {
-      res.status(400).json({ message: "Erro ao listar categorias de livros." });
+      const categorias: CategoriaUsuarioEntity[] = await this.catalogoService.listarCategoriasUsuario();
+      return sucess(200, new BasicResponseDto("Categorias de Usuários listadas com sucesso!", categorias));
+    } catch (error: any) {
+      return notFound(400, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  listarCategoriasUsuario(req: Request, res: Response): void {
+  @Get("categorias-livro")
+  async listarCategoriasLivro(
+    @Res() sucess: TsoaResponse<200, BasicResponseDto>,
+    @Res() notFound: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const categorias = this.catalogoService.listarCategoriasUsuario();
-      res.status(200).json(categorias);
-    } catch (error: unknown) {
-      res.status(400).json({ message: "Erro ao listar categorias de usuários." });
+      const categorias: CategoriaLivroEntity[] = await this.catalogoService.listarCategoriasLivro();
+      return sucess(200, new BasicResponseDto("Categorias de Livros listadas com sucesso!", categorias));
+    } catch (error: any) {
+      return notFound(400, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  listarCursos(req: Request, res: Response): void {
+  @Get("cursos")
+  async listarCursos(
+    @Res() sucess: TsoaResponse<200, BasicResponseDto>,
+    @Res() notFound: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const cursos = this.catalogoService.listarCursos();
-      res.status(200).json(cursos);
-    } catch (error: unknown) {
-      res.status(400).json({ message: "Erro ao listar cursos." });
+      const cursos: CursoEntity[] = await this.catalogoService.listarCursos();
+      return sucess(200, new BasicResponseDto("Cursos listados com sucesso!", cursos));
+    } catch (error: any) {
+      return notFound(400, new BasicResponseDto(error.message, undefined));
     }
   }
 }
