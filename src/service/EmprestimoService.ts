@@ -10,7 +10,7 @@ export class EmprestimoService {
   private usuarioRepository = UsuarioRepository.getInstance();
   private livroRepository = LivroRepository.getInstance();
 
-  cadastrarEmprestimo(dados: any): EmprestimoEntity {
+  async cadastrarEmprestimo(dados: any): Promise<EmprestimoEntity> {
     const { cpf, estoque_id } = dados;
 
     if (!cpf || estoque_id === undefined) {
@@ -25,7 +25,7 @@ export class EmprestimoService {
     if (!estoque) throw new Error("Exemplar não encontrado.");
     if (!estoque.disponivel) throw new Error("Exemplar indisponível.");
 
-    const livro = this.livroRepository.buscarPorISBN(estoque.livro_isbn);
+    const livro = await this.livroRepository.buscarPorISBN(estoque.livro_isbn);
     if (!livro) throw new Error("Livro não encontrado.");
 
     const emprestimosUsuario = this.emprestimoRepository.listar().filter(e =>

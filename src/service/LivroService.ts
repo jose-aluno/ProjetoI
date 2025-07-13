@@ -13,7 +13,7 @@ export class LivroService {
             throw new Error("Todos os campos obrigatórios devem ser informados.")
         }
 
-        const existente = this.livroRepository.buscarPorISBN(isbn)
+        const existente = await this.livroRepository.buscarPorISBN(isbn)
         if (existente) {
             throw new Error("Livro com este ISBN já está cadastrado.")
         }
@@ -30,7 +30,7 @@ export class LivroService {
             throw new Error("Categoria de livro inexistente.")
         }
 
-        const livros = this.livroRepository.listar()
+        const livros = await this.livroRepository.listar()
         for (let i = 0; i < livros.length; i++) {
             const livro = livros[i]
             if (
@@ -56,12 +56,12 @@ export class LivroService {
         return novoLivro
     }
 
-    listarLivros(): LivroEntity[] {
-        return this.livroRepository.listar()
+    async listarLivros(): Promise<LivroEntity[]> {
+        return await this.livroRepository.listar()
     }
 
-    buscarPorISBN(isbn: string): LivroEntity | undefined {
-        return this.livroRepository.buscarPorISBN(isbn)
+    async buscarPorISBN(isbn: string): Promise<LivroEntity | undefined> {
+        return await this.livroRepository.buscarPorISBN(isbn)
     }
 
     async atualizarLivro(isbn: string, dados: any): Promise<boolean> {
@@ -71,7 +71,7 @@ export class LivroService {
             throw new Error("Todos os campos obrigatórios devem ser informados.")
         }
 
-        const livroExistente = this.livroRepository.buscarPorISBN(isbn)
+        const livroExistente = await this.livroRepository.buscarPorISBN(isbn)
         if (!livroExistente) {
             throw new Error("Livro não encontrado para atualização.")
         }
@@ -88,7 +88,7 @@ export class LivroService {
             throw new Error("Categoria de livro inexistente.")
         }
 
-        const livros = this.livroRepository.listar()
+        const livros = await this.livroRepository.listar()
         for (let i = 0; i < livros.length; i++) {
             const livro = livros[i]
             if (
@@ -101,10 +101,10 @@ export class LivroService {
             }
         }
 
-        return this.livroRepository.atualizar(isbn, titulo, autor, editora, edicao, categoria_id)
+        return await this.livroRepository.atualizar(isbn, titulo, autor, editora, edicao, categoria_id)
     }
 
-    removerLivro(isbn: string): boolean {
-        return this.livroRepository.remover(isbn)
+    async removerLivro(isbn: string): Promise<boolean> {
+        return await this.livroRepository.remover(isbn)
     }
 }
