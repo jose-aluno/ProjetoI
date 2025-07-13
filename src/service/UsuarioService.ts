@@ -8,7 +8,7 @@ export class UsuarioService {
     private categoriaUsuarioRepository = CategoriaUsuarioRepository.getInstance()
     private cursoRepository = CursoRepository.getInstance()
 
-    cadastrarUsuario(dados: any): UsuarioEntity {
+    async cadastrarUsuario(dados: any): Promise<UsuarioEntity> {
         const { nome, cpf, email, categoria_id, curso_id } = dados;
 
         if (!nome || !cpf || !email || !categoria_id || !curso_id) {
@@ -20,7 +20,7 @@ export class UsuarioService {
             throw new Error("CPF já cadastrado.");
         }
 
-        const categorias = this.categoriaUsuarioRepository.listar();
+        const categorias = await this.categoriaUsuarioRepository.listar();
         let categoriaExiste = false;
         for (let i = 0; i < categorias.length; i++) {
             if (categorias[i].id === categoria_id) {
@@ -70,7 +70,7 @@ export class UsuarioService {
         return usuarioExistente
     }
 
-    atualizarUsuario(cpf: string, dados: any): boolean {
+    async atualizarUsuario(cpf: string, dados: any): Promise<boolean> {
         const { nome, status, email, categoria_id, curso_id } = dados;
 
         if (!nome || status === undefined || !email || !categoria_id || !curso_id) {
@@ -81,7 +81,7 @@ export class UsuarioService {
             throw new Error("Status inválido. Valores permitidos: 0 (inativo), 1 (ativo), 2 (suspenso).");
         }
 
-        const categorias = this.categoriaUsuarioRepository.listar();
+        const categorias = await this.categoriaUsuarioRepository.listar();
         let categoriaExiste = false;
         for (let i = 0; i < categorias.length; i++) {
             if (categorias[i].id === categoria_id) {
