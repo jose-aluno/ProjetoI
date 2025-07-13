@@ -1,82 +1,92 @@
-import { Request, Response } from "express"
-import { UsuarioService } from "../service/UsuarioService"
+import { Body, Controller, Delete, Get, Path, Post, Put, Query, Res, Route, Tags, TsoaResponse } from "tsoa";
+import { UsuarioService } from "../service/UsuarioService";
+import { BasicResponseDto } from "../model/dto/BasicResponseDto";
+import { CadastrarUsuarioDTO, AtualizarUsuarioDTO } from "../model/dto/UsuarioDto";
 
-export class UsuarioController {
-  private usuarioService = new UsuarioService()
+@Route("usuarios")
+@Tags("usuarios")
+export class UsuarioController extends Controller {
+  private usuarioService = new UsuarioService();
 
-  listarUsuarios(req: Request, res: Response): void {
+  @Get()
+  async listarUsuarios(
+    @Res() success: TsoaResponse<200, BasicResponseDto>,
+    @Res() serverError: TsoaResponse<500, BasicResponseDto>
+  ) {
     try {
-      const usuarios = this.usuarioService.listarUsuarios()
-      res.status(200).json(usuarios)
-    } catch (error: unknown) {
-      res.status(500).json({
-        message: error instanceof Error ? error.message : "Erro ao listar usuários.",
-      });
+      const usuarios = await this.usuarioService.listarUsuarios();
+      return success(200, new BasicResponseDto("Usuários listados com sucesso!", usuarios));
+    } catch (error: any) {
+      return serverError(500, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  buscarUsuarioPorCpf(req: Request, res: Response): void {
+  @Get("{cpf}")
+  async buscarUsuarioPorCpf(
+    @Path() cpf: string,
+    @Res() success: TsoaResponse<200, BasicResponseDto>,
+    @Res() notFound: TsoaResponse<404, BasicResponseDto>,
+    @Res() badRequest: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const { cpf } = req.params
-      const usuario = this.usuarioService.buscarPorCPF(cpf)
-
+      const usuario = await this.usuarioService.buscarPorCPF(cpf);
       if (!usuario) {
-        res.status(404).json({ message: "Usuário não encontrado com o CPF informado." })
+        return notFound(404, new BasicResponseDto("Usuário não encontrado com o CPF informado.", undefined));
       }
-
-      res.status(200).json(usuario)
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao buscar usuário por CPF.",
-      });
+      return success(200, new BasicResponseDto("Usuário encontrado com sucesso!", usuario));
+    } catch (error: any) {
+      return badRequest(400, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  cadastrarUsuario(req: Request, res: Response): void {
+  @Post()
+  async cadastrarUsuario(
+    @Body() body: CadastrarUsuarioDTO,
+    @Res() created: TsoaResponse<201, BasicResponseDto>,
+    @Res() badRequest: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const usuario = this.usuarioService.cadastrarUsuario(req.body)
-      res.status(201).json({
-        message: "Usuário cadastrado com sucesso!",
-        usuario: usuario,
-      });
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao cadastrar usuário.",
-      });
+      const usuario = await this.usuarioService.cadastrarUsuario(body);
+      return created(201, new BasicResponseDto("Usuário cadastrado com sucesso!", usuario));
+    } catch (error: any) {
+      return badRequest(400, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  atualizarUsuario(req: Request, res: Response): void {
+  @Put("{cpf}")
+  async atualizarUsuario(
+    @Path() cpf: string,
+    @Body() body: AtualizarUsuarioDTO,
+    @Res() success: TsoaResponse<200, BasicResponseDto>,
+    @Res() notFound: TsoaResponse<404, BasicResponseDto>,
+    @Res() badRequest: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const { cpf } = req.params;
-      const atualizado = this.usuarioService.atualizarUsuario(cpf, req.body)
-
+      const atualizado = await this.usuarioService.atualizarUsuario(cpf, body);
       if (!atualizado) {
-        res.status(404).json({ message: "Usuário não encontrado para atualização." });
+        return notFound(404, new BasicResponseDto("Usuário não encontrado para atualização.", undefined));
       }
-
-      res.status(200).json({ message: "Usuário atualizado com sucesso!" })
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao atualizar usuário.",
-      });
+      return success(200, new BasicResponseDto("Usuário atualizado com sucesso!", atualizado));
+    } catch (error: any) {
+      return badRequest(400, new BasicResponseDto(error.message, undefined));
     }
   }
 
-  removerUsuario(req: Request, res: Response): void {
+  @Delete("{cpf}")
+  async removerUsuario(
+    @Path() cpf: string,
+    @Res() success: TsoaResponse<200, BasicResponseDto>,
+    @Res() notFound: TsoaResponse<404, BasicResponseDto>,
+    @Res() badRequest: TsoaResponse<400, BasicResponseDto>
+  ) {
     try {
-      const { cpf } = req.params;
-      const removido = this.usuarioService.removerUsuario(cpf)
-
+      const removido = await this.usuarioService.removerUsuario(cpf);
       if (!removido) {
-        res.status(404).json({ message: "Usuário não encontrado para remoção." })
+        return notFound(404, new BasicResponseDto("Usuário não encontrado para remoção.", undefined));
       }
-
-      res.status(200).json({ message: "Usuário removido com sucesso!" })
-    } catch (error: unknown) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Erro ao remover usuário.",
-      });
+      return success(200, new BasicResponseDto("Usuário removido com sucesso!", undefined));
+    } catch (error: any) {
+      return badRequest(400, new BasicResponseDto(error.message, undefined));
     }
   }
 }
